@@ -1,0 +1,42 @@
+{
+    "version": 4,
+    "name": "shogunshowdown.zip",
+    "items": [
+        "Shogun Showdown.sh",
+        "shogunshowdown"
+    ],
+    "items_opt": null,
+    "attr": {
+        "title": "Shogun Showdown",
+        "porter": [
+            "crxssrazr93"
+        ],
+        "desc": "A turn-based roguelike where every move counts. Fight through waves of enemies on a single row of tiles, plan around each foe's attack timer, collect and upgrade attack tiles, and face the Shogun.",
+        "desc_md": null,
+        "inst": "Purchase the game on Steam and use the Steam console to download the Linux build: `download_depot 2084000 2084002 5092188064288801929`. Copy everything from the download (`ShogunShowdown.x86_64`, `UnityPlayer.so` and the `ShogunShowdown_Data` folder) into `ports/shogunshowdown/gamedata/`. The first start adapts the game files to the device, which takes about a minute.",
+        "inst_md": "Purchase the game on [Steam](https://store.steampowered.com/app/2084000/Shogun_Showdown/) and use the [Steam console](https://steamcommunity.com/sharedfiles/filedetails/?id=873543244) to download the Linux build: `download_depot 2084000 2084002 5092188064288801929`. Copy everything from the download (`ShogunShowdown.x86_64`, `UnityPlayer.so` and the `ShogunShowdown_Data` folder) into `ports/shogunshowdown/gamedata/`. The first start adapts the game files to the device, which takes about a minute.",
+        "genres": [
+            "rpg",
+            "strategy"
+        ],
+        "image": {},
+        "rtr": false,
+        "exp": false,
+        "runtime": [
+            "weston_pkg_0.2.squashfs"
+        ],
+        "store": [
+            {
+                "name": "Steam",
+                "gameurl": "https://store.steampowered.com/app/2084000/Shogun_Showdown/",
+                "developerurl": "https://store.steampowered.com/developer/roboatino"
+            }
+        ],
+        "availability": "paid",
+        "reqs": [],
+        "arch": [
+            "aarch64"
+        ],
+        "min_glibc": ""
+    }
+}

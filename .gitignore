@@ -1,0 +1,21 @@
+# Built by build/build.sh (sources and build recipe are in the repo)
+port/shogunshowdown/box64/box64
+port/shogunshowdown/box64/box64-x86_64-linux-gnu/libgcc_s.so.1
+port/shogunshowdown/glespass/libGL.so.1
+build/src/
+glespass/build/
+glespass/out/
+# Game files and what the port writes next to them are never part of the repo
+port/shogunshowdown/gamedata/*
+!port/shogunshowdown/gamedata/Put Linux game files here
+port/shogunshowdown/conf/
+port/shogunshowdown/astc/
+port/shogunshowdown/.patch_stamp
+port/shogunshowdown/log.txt
+port/shogunshowdown/player.log
+# Test output and packages
+tests/out/
+tests/pc/gles_force.so
+*.zip
+__pycache__/
+venv/

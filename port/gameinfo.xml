@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gameList>
+  <game>
+    <path>./Shogun Showdown.sh</path>
+    <name>Shogun Showdown</name>
+    <desc>A turn-based roguelike where every move counts. Fight through waves of enemies on a single row of tiles, plan around each foe's attack timer, collect and upgrade attack tiles, and face the Shogun.</desc>
+    <releasedate>20230923T000000</releasedate>
+    <developer>Roboatino</developer>
+    <publisher>Goblinz Publishing</publisher>
+    <genre>Role-Playing, Strategy</genre>
+    <image>./shogunshowdown/cover.png</image>
+  </game>
+</gameList>
