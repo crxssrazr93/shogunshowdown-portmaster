@@ -39,11 +39,11 @@ if [ ! -f "$DATADIR/ShogunShowdown.x86_64" ]; then
 fi
 $ESUDO chmod a+x "$DATADIR/ShogunShowdown.x86_64" "$GAMEDIR/box64/box64"
 
-# One time setup (again after a game update): patch five game files for OpenGL ES and compress the
-# large textures (see tools/patchscript). The stamp covers every file the setup changes.
+# One time setup (again after a game update): patch six game files (OpenGL ES, side panels on
+# narrow screens) and compress the large textures (see tools/patchscript). The stamp covers every file the setup changes.
 PATCHED_FILES="globalgamemanagers.assets resources.assets sharedassets0.assets sharedassets2.assets
   Resources/unity_builtin_extra sharedassets1.assets resources.assets.resS sharedassets1.assets.resS
-  sharedassets2.assets.resS"
+  sharedassets2.assets.resS Managed/Assembly-CSharp.dll"
 patch_stamp() { (cd "$DATADIR/ShogunShowdown_Data" && stat -c '%s %Y' $PATCHED_FILES 2>/dev/null); }
 if [ "$(cat .patch_stamp 2>/dev/null)" != "$(patch_stamp)" ]; then
   export GAMEDIR DATADIR DEVICE_ARCH controlfolder PATCHED_FILES

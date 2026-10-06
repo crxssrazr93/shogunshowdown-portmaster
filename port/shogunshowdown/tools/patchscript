@@ -1,11 +1,12 @@
 #!/bin/bash
 # First run setup, run by PortMaster's patcher (utils/patcher.txt), which shows each line this
 # script prints. The launcher exports GAMEDIR, DATADIR, DEVICE_ARCH and controlfolder.
-# Steps 1 to 5: five game files get the port's changes (OpenGL ES 3 shaders and graphics API,
-# audio that streams instead of being held in memory) from the xdelta patches in patch/. Each file
+# Steps 1 to 6: six game files get the port's changes (OpenGL ES 3 shaders and graphics API,
+# audio that streams instead of being held in memory, side panels moved in on screens narrower
+# than 16:9) from the xdelta patches in patch/. Each file
 # is checked by MD5 before and after, so only the supported Steam build is patched, and a file
 # already patched is left alone.
-# Step 6: the large textures are converted to ASTC 4x4 with PortMaster's astcenc (tools/
+# Step 7: the large textures are converted to ASTC 4x4 with PortMaster's astcenc (tools/
 # astc_textures.py), which cuts their GPU memory to a quarter so a run fits in 1 GB of RAM.
 cd "$DATADIR/ShogunShowdown_Data" || exit 1
 XDELTA="$controlfolder/xdelta3"
@@ -16,7 +17,8 @@ FILES="globalgamemanagers.assets 5481a81316749ca4311cbb2e90809d84 85107465346ae6
 resources.assets 58763dd03317d56ae69353c0b6a2f275 f30a2a5168301c7af7125b11f05dfe02
 sharedassets0.assets d78c444f7027da6762bb20657761f0cc f75dc5bfdbae3235bd6db617092d3ea2
 sharedassets2.assets 8387ebc74f08c1ba648d037bb6a42a73 d077132ee5b784203cbb1fc845715503
-Resources/unity_builtin_extra 200959112b2568233b06d35b634e893b 43d0ada6f0304c09c1831aacba04fdf2"
+Resources/unity_builtin_extra 200959112b2568233b06d35b634e893b 43d0ada6f0304c09c1831aacba04fdf2
+Managed/Assembly-CSharp.dll fd8f4c14bc58996be94b6e5c8d794205 d7561ebb295d1b6eb67a32431644957e"
 
 echo "Adapting your copy of Shogun Showdown to this device."
 echo "This runs once (and again after a game update)."
@@ -29,9 +31,9 @@ failed=0
 n=0
 while read -r file orig patched; do
   n=$((n + 1))
-  echo "Step $n of 6: $file"
+  echo "Step $n of 7: $file"
   sum="$(md5sum "$file" 2>/dev/null | cut -d' ' -f1)"
-  # step 6 rewrites some of these files again; its marker holds the MD5 it left them with
+  # step 7 rewrites some of these files again; its marker holds the MD5 it left them with
   astc_sum="$(cat "$GAMEDIR/astc/$(basename "$file").astc_done" 2>/dev/null)"
   if [ "$sum" = "$patched" ] || [ "$sum" = "$astc_sum" ]; then
     echo "  already patched"
@@ -54,7 +56,7 @@ while read -r file orig patched; do
 done <<< "$FILES"
 
 if [ "$failed" = 0 ]; then
-  echo "Step 6 of 6: compressing textures (about a minute)"
+  echo "Step 7 of 7: compressing textures (about a minute)"
   python3 "$GAMEDIR/tools/astc_textures.py" "$DATADIR/ShogunShowdown_Data" \
     "$controlfolder/astcenc.$DEVICE_ARCH" "$GAMEDIR/tools/astc_manifest.json" "$GAMEDIR/astc" || failed=1
 fi
