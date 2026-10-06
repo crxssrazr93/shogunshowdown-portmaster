@@ -20,3 +20,4 @@ tests/pc/gles_force.so
 __pycache__/
 venv/
 port/shogunshowdown/setup_log.txt
+port/shogunshowdown/*.prev.txt

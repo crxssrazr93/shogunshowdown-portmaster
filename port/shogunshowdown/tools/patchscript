@@ -11,6 +11,7 @@
 # PortMaster's patcher only shows this output on screen; keep a copy for bug reports.
 # Device, system and memory details first (tools/portlog.sh), then everything this script prints
 source "$GAMEDIR/tools/portlog.sh"
+mv -f "$GAMEDIR/setup_log.txt" "$GAMEDIR/setup_log.prev.txt" 2>/dev/null  # keep the previous setup's log
 port_header "Shogun Showdown setup" > "$GAMEDIR/setup_log.txt"
 exec > >(tee -a "$GAMEDIR/setup_log.txt") 2>&1
 # Size and modification time of each file, as "stat -c '%s %Y'" prints them (muOS has no stat)

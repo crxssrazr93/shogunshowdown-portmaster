@@ -30,6 +30,8 @@ GAMEDIR=/$directory/ports/shogunshowdown
 DATADIR=$GAMEDIR/gamedata
 cd "$GAMEDIR"
 
+# the previous run's log is kept as log.prev.txt
+mv -f "$GAMEDIR/log.txt" "$GAMEDIR/log.prev.txt" 2>/dev/null
 > "$GAMEDIR/log.txt" && exec > >(tee "$GAMEDIR/log.txt") 2>&1
 # Device, system and memory details for bug reports (tools/portlog.sh)
 # The files a bug report needs; named in log.txt and on screen only when something fails
