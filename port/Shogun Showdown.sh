@@ -175,7 +175,7 @@ port_log "starting the game"
 # cameras' output, which leaves only the UI on screen.
 $ESUDO env WRAPPED_LIBRARY_PATH="$GAMEDIR/glespass" GLESPASS_CTXFIX=1 \
   GLESPASS_VENDOR=Generic GLESPASS_RENDERER=GLES-device \
-  BOX64_SHOWSEGV=1 BOX64_SHOWBT=1 BOX64_LD_LIBRARY_PATH="$GAMEDIR/box64/box64-x86_64-linux-gnu" \
+  BOX64_LD_LIBRARY_PATH="$GAMEDIR/box64/box64-x86_64-linux-gnu" \
   $weston_dir/westonwrap.sh headless noop kiosk crusty_glx \
   XDG_RUNTIME_DIR="$REAL_XDG_RUNTIME_DIR" HOME="$GAMEDIR/conf" XDG_CONFIG_HOME="$GAMEDIR/conf" \
   "$GAMEDIR/box64/box64" ./ShogunShowdown.x86_64 -screen-fullscreen 1 \
