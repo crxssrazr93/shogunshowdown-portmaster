@@ -9,8 +9,10 @@
 # Step 7: the large textures are converted to ASTC 4x4 with PortMaster's astcenc (tools/
 # astc_textures.py), which cuts their GPU memory to a quarter so a run fits in 1 GB of RAM.
 # PortMaster's patcher only shows this output on screen; keep a copy for bug reports.
-exec > >(tee "$GAMEDIR/setup_log.txt") 2>&1
-echo "$(date) ${CFW_NAME:-} ${DEVICE_NAME:-} ${DEVICE_ARCH:-}" >&2
+# Device, system and memory details first (tools/portlog.sh), then everything this script prints
+source "$GAMEDIR/tools/portlog.sh"
+port_header "Shogun Showdown setup" > "$GAMEDIR/setup_log.txt"
+exec > >(tee -a "$GAMEDIR/setup_log.txt") 2>&1
 # Size and modification time of each file, as "stat -c '%s %Y'" prints them (muOS has no stat)
 file_stamp() {
   if command -v stat >/dev/null; then stat -c '%s %Y' "$@" 2>/dev/null; return 0; fi
@@ -74,7 +76,12 @@ fi
 if [ "$failed" = 0 ]; then
   file_stamp $PATCHED_FILES > "$GAMEDIR/.patch_stamp"
   echo "Done. Starting the game."
+  port_log "setup finished in ${SECONDS}s"
+  port_mem end
 else
   echo "Setup failed. This port supports the current Steam (Linux) build of the game."
   echo "Verify the game files in Steam, copy them again and retry."
+  echo "To report a problem, send ${PORT_REPORT_FILES:-setup_log.txt}."
+  port_log "setup FAILED after ${SECONDS}s"
+  port_mem end
 fi

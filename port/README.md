@@ -27,6 +27,10 @@ Runs through box64 and Westonpack. Saves are in `conf/unity3d/Roboatino/ShogunSh
 
 Source and build instructions: https://github.com/crxssrazr93/shogunshowdown-portmaster
 
+## Reporting problems
+
+Please send `ports/shogunshowdown/log.txt`, `ports/shogunshowdown/setup_log.txt` and `player.log` (Unity's own log). `log.txt` is rewritten on every start, so copy it right after the problem happens. Lines starting with `PORT:` list the device, firmware, screen, memory and swap, the state of the setup, and at the end how long the game ran and whether the system ran out of memory.
+
 ## Thanks
 
 Roboatino and Goblinz Publishing, ptitSeb (box64), binarycounter (Westonpack and the Papers, Please Steam stub this one follows), Knifethrower (Unity porting tools, glespass), Arm (astcenc), the PortMaster team.
