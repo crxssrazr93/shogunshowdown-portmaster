@@ -54,7 +54,7 @@ if [ "$(cat .patch_stamp 2>/dev/null)" != "$(patch_stamp)" ]; then
   source "$controlfolder/utils/patcher.txt"
   # tools/patchscript writes the stamp only when every file checked out
   if [ "$(cat .patch_stamp 2>/dev/null)" != "$(patch_stamp)" ]; then
-    pm_message "Preparing the game failed. This port needs the current Steam (Linux) build, see the README."
+    pm_message "Preparing the game failed, see ports/shogunshowdown/setup_log.txt and the README."
     sleep 8
     pm_finish
     exit 1

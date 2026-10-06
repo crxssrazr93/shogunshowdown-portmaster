@@ -19,3 +19,4 @@ tests/pc/gles_force.so
 *.zip
 __pycache__/
 venv/
+port/shogunshowdown/setup_log.txt
