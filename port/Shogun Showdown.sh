@@ -44,7 +44,14 @@ $ESUDO chmod a+x "$DATADIR/ShogunShowdown.x86_64" "$GAMEDIR/box64/box64"
 PATCHED_FILES="globalgamemanagers.assets resources.assets sharedassets0.assets sharedassets2.assets
   Resources/unity_builtin_extra sharedassets1.assets resources.assets.resS sharedassets1.assets.resS
   sharedassets2.assets.resS Managed/Assembly-CSharp.dll"
-patch_stamp() { (cd "$DATADIR/ShogunShowdown_Data" && stat -c '%s %Y' $PATCHED_FILES 2>/dev/null); }
+# Size and modification time of each file, as "stat -c '%s %Y'" prints them (muOS has no stat)
+file_stamp() {
+  if command -v stat >/dev/null; then stat -c '%s %Y' "$@" 2>/dev/null; return 0; fi
+  local f
+  for f in "$@"; do [ -e "$f" ] && echo "$(ls -lnL "$f" | awk '{print $5}') $(date -r "$f" +%s)"; done
+  return 0
+}
+patch_stamp() { (cd "$DATADIR/ShogunShowdown_Data" && file_stamp $PATCHED_FILES); }
 if [ "$(cat .patch_stamp 2>/dev/null)" != "$(patch_stamp)" ]; then
   export GAMEDIR DATADIR DEVICE_ARCH controlfolder PATCHED_FILES
   chmod +x "$GAMEDIR/tools/patchscript"

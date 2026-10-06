@@ -11,6 +11,13 @@
 # PortMaster's patcher only shows this output on screen; keep a copy for bug reports.
 exec > >(tee "$GAMEDIR/setup_log.txt") 2>&1
 echo "$(date) ${CFW_NAME:-} ${DEVICE_NAME:-} ${DEVICE_ARCH:-}" >&2
+# Size and modification time of each file, as "stat -c '%s %Y'" prints them (muOS has no stat)
+file_stamp() {
+  if command -v stat >/dev/null; then stat -c '%s %Y' "$@" 2>/dev/null; return 0; fi
+  local f
+  for f in "$@"; do [ -e "$f" ] && echo "$(ls -lnL "$f" | awk '{print $5}') $(date -r "$f" +%s)"; done
+  return 0
+}
 cd "$DATADIR/ShogunShowdown_Data" || exit 1
 XDELTA="$controlfolder/xdelta3"
 [ -x "$XDELTA" ] || XDELTA="$(command -v xdelta3)"
@@ -65,7 +72,7 @@ if [ "$failed" = 0 ]; then
 fi
 
 if [ "$failed" = 0 ]; then
-  stat -c '%s %Y' $PATCHED_FILES > "$GAMEDIR/.patch_stamp"
+  file_stamp $PATCHED_FILES > "$GAMEDIR/.patch_stamp"
   echo "Done. Starting the game."
 else
   echo "Setup failed. This port supports the current Steam (Linux) build of the game."
