@@ -1,4 +1,5 @@
 #!/bin/bash
+# PORTMASTER: shogunshowdown.zip, Shogun Showdown.sh
 
 XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share}
 
@@ -156,10 +157,19 @@ legacy_sdl_mapping() {
   done
   echo "$out"
 }
+# The game reads the pad itself through the Unity player's SDL, with PortMaster's mapping for the
+# built in pad renumbered for that SDL's button order. Other pads use the player's own database.
 unity_mapping=""
 while IFS= read -r line; do
-  [ -n "$line" ] && unity_mapping+="$(legacy_sdl_mapping "$line")"$'\n'
+  [ -n "$line" ] || continue
+  unity_mapping="$(legacy_sdl_mapping "$line")"
+  break
 done <<< "$SDL_GAMECONTROLLERCONFIG"
+# The mapping goes to the game as a westonwrap VAR=value argument: westonwrap sources PortMaster's
+# control.txt again, which on some firmwares (muOS) exports the original mapping over anything
+# exported here. westonwrap evals its arguments, so the mapping is one line and the spaces in its
+# name (only the GUID is matched) become dots.
+unity_mapping="$(printf '%s' "$unity_mapping" | tr ' ' '.')"
 
 mkdir -p "$GAMEDIR/conf"
 if [ "$CFW_NAME" = "muOS" ] && [ -n "$GPTOKEYB2" ]; then
@@ -167,10 +177,7 @@ if [ "$CFW_NAME" = "muOS" ] && [ -n "$GPTOKEYB2" ]; then
 else
   $GPTOKEYB "ShogunShowdown.x86_64" -c "$GAMEDIR/shogunshowdown.gptk" &
 fi
-# Only the game gets the renumbered mapping: gptokeyb is a current SDL program. (westonwrap evals
-# its arguments, so a value with spaces cannot be passed to it as VAR=value.)
-export SDL_GAMECONTROLLERCONFIG="$unity_mapping"
-port_log "controller mapping for the game: $(printf '%s\n' "$SDL_GAMECONTROLLERCONFIG" | head -n 1)"
+port_log "controller mapping for the game: ${unity_mapping:-none}"
 
 # westonwrap replaces XDG_RUNTIME_DIR; pass the real one on so the game's audio reaches PipeWire.
 REAL_XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
@@ -190,7 +197,7 @@ $ESUDO env WRAPPED_LIBRARY_PATH="$GAMEDIR/glespass" GLESPASS_CTXFIX=1 \
   GLESPASS_VENDOR=Generic GLESPASS_RENDERER=GLES-device \
   BOX64_LD_LIBRARY_PATH="$GAMEDIR/box64/box64-x86_64-linux-gnu" \
   $weston_dir/westonwrap.sh headless noop kiosk crusty_glx \
-  XDG_RUNTIME_DIR="$REAL_XDG_RUNTIME_DIR" HOME="$GAMEDIR/conf" XDG_CONFIG_HOME="$GAMEDIR/conf" \
+  ${unity_mapping:+SDL_GAMECONTROLLERCONFIG="$unity_mapping"} XDG_RUNTIME_DIR="$REAL_XDG_RUNTIME_DIR" HOME="$GAMEDIR/conf" XDG_CONFIG_HOME="$GAMEDIR/conf" \
   "$GAMEDIR/box64/box64" ./ShogunShowdown.x86_64 -screen-fullscreen 1 \
   -screen-width "$DISPLAY_WIDTH" -screen-height "$DISPLAY_HEIGHT" -logFile "$GAMEDIR/player.log"
 
