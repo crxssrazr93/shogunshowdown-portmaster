@@ -14,6 +14,7 @@ cp "Shogun Showdown.sh" "$stage/"
 cp -r shogunshowdown "$stage/"
 rm -rf "$stage"/shogunshowdown/{conf,astc,log.txt,log.prev.txt,setup_log.txt,setup_log.prev.txt,player.log,.patch_stamp}
 find "$stage/shogunshowdown/gamedata" -mindepth 1 ! -name 'Put Linux game files here' -exec rm -rf {} +
+find "$stage" -name __pycache__ -prune -exec rm -rf {} +  # Python caches from local test runs
 cp port.json gameinfo.xml screenshot.png cover.png "$stage/shogunshowdown/"
 cp README.md "$stage/shogunshowdown/shogunshowdown.md"
 rm -f "$R/shogunshowdown.zip"
