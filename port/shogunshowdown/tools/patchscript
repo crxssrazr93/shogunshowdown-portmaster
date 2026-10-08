@@ -45,9 +45,15 @@ n=0
 while read -r file orig patched; do
   n=$((n + 1))
   echo "Step $n of 7: $file"
+  if [ ! -f "$file" ]; then
+    echo "  missing: copy the whole game again."
+    failed=1
+    continue
+  fi
   sum="$(md5sum "$file" 2>/dev/null | cut -d' ' -f1)"
-  # step 7 rewrites some of these files again; its marker holds the MD5 it left them with
-  astc_sum="$(cat "$GAMEDIR/astc/$(basename "$file").astc_done" 2>/dev/null)"
+  # step 7 rewrites some of these files again; its marker (next to the file, or in astc/ from
+  # older releases) holds the MD5 it left them with
+  astc_sum="$(cat "$file.astc_done" "$GAMEDIR/astc/$(basename "$file").astc_done" 2>/dev/null | head -n 1)"
   if [ "$sum" = "$patched" ] || [ "$sum" = "$astc_sum" ]; then
     echo "  already patched"
     continue

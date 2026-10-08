@@ -51,6 +51,10 @@ file_stamp() {
 }
 patch_stamp() { (cd "$DATADIR/ShogunShowdown_Data" && file_stamp $PATCHED_FILES); }
 port_files "$DATADIR/ShogunShowdown.x86_64" "$DATADIR/UnityPlayer.so" "$DATADIR/ShogunShowdown_Data/Managed/Assembly-CSharp.dll"
+# Texture markers belong next to the files they describe (older releases kept them in astc/)
+for marker in astc/*.astc_done; do
+  [ -f "$marker" ] && [ -d "$DATADIR/ShogunShowdown_Data" ] && mv -f "$marker" "$DATADIR/ShogunShowdown_Data/"
+done
 if [ "$(cat .patch_stamp 2>/dev/null)" = "$(patch_stamp)" ]; then port_log "setup: up to date"; else port_log "setup: needed (first run, game update or changed files)"; fi
 if [ "$(cat .patch_stamp 2>/dev/null)" != "$(patch_stamp)" ]; then
   export GAMEDIR DATADIR DEVICE_ARCH controlfolder PATCHED_FILES

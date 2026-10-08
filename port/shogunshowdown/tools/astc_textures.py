@@ -12,6 +12,8 @@ encodes it with PortMaster's astcenc, appends the result to the .resS file and p
 at it. Files that do not match the manifest's MD5s are left alone.
 
 Usage: astc_textures.py <Data dir> <astcenc> <manifest> <work dir>
+Each converted file gets a marker next to it (<file>.astc_done, the MD5 it was left with), so the
+marker travels with the game files; markers from older releases in <work dir> are moved there.
 Prints progress lines; exit status 0 when every file is converted (or already was).
 """
 import hashlib, json, os, struct, subprocess, sys
@@ -39,9 +41,18 @@ def write_tga(path, raw, w, h, bpp):
 def convert(data_dir, enc, entry, work, done_marker):
     assets = os.path.join(data_dir, entry['assets'])
     ress = os.path.join(data_dir, entry['ress'])
+    for path in (assets, ress):
+        if not os.path.exists(path):
+            print(f"  {os.path.relpath(path, data_dir)} is missing: copy the whole game again", flush=True)
+            return False
     if os.path.exists(done_marker) and open(done_marker).read().strip() == md5(assets):
-        print(f"  {entry['assets']}: already converted", flush=True)
-        return True
+        # the converted textures live past the original end of the .resS; a fresh copy of the
+        # .resS alone would leave them pointing past its end
+        if os.path.getsize(ress) > entry['ress_size']:
+            print(f"  {entry['assets']}: already converted", flush=True)
+            return True
+        print(f"  {entry['ress']} does not match {entry['assets']}: copy the whole game again", flush=True)
+        return False
     if md5(assets) != entry['assets_md5']:
         print(f"  {entry['assets']}: unexpected version, not converted", flush=True)
         return False
@@ -90,9 +101,14 @@ def convert(data_dir, enc, entry, work, done_marker):
         f.write(buf)
         f.flush()
         os.fsync(f.fileno())
-    os.replace(tmp, assets)
-    with open(done_marker, 'w') as f:
+    # The marker goes first: if the setup is stopped between the two renames, the .assets file is
+    # still the unconverted one, which a rerun converts again.
+    with open(done_marker + '.tmp', 'w') as f:
         f.write(hashlib.md5(buf).hexdigest() + '\n')
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(done_marker + '.tmp', done_marker)
+    os.replace(tmp, assets)
     return True
 
 
@@ -103,7 +119,13 @@ def main():
         m = json.load(f)
     ok = True
     for entry in m['files']:
-        marker = os.path.join(work, entry['assets'] + '.astc_done')
+        marker = os.path.join(data_dir, entry['assets'] + '.astc_done')
+        old = os.path.join(work, entry['assets'] + '.astc_done')
+        if os.path.exists(old):
+            if not os.path.exists(marker):
+                os.replace(old, marker)
+            else:
+                os.remove(old)
         ok = convert(data_dir, enc, entry, work, marker) and ok
     for n in ('tex.tga', 'tex.astc'):
         try:

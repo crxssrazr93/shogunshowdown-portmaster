@@ -4,7 +4,7 @@ Buy the game on [Steam](https://store.steampowered.com/app/2084000/Shogun_Showdo
 
 `download_depot 2084000 2084002 5092188064288801929`
 
-Copy `ShogunShowdown.x86_64`, `UnityPlayer.so` and the `ShogunShowdown_Data` folder into `ports/shogunshowdown/gamedata/`. The first start patches your copy for the device (about a minute, again after a game update) and stops with a message if the build is a different one.
+Copy `ShogunShowdown.x86_64`, `UnityPlayer.so` and the `ShogunShowdown_Data` folder into `ports/shogunshowdown/gamedata/`. The first start patches your copy for the device (about a minute, again after a game update) and stops with a message if the build is a different one. If files are missing or damaged, copy the game files again: the next start patches them.
 
 ## Controls
 
