@@ -102,3 +102,5 @@ All off unless set, documented at the top of `glespass/glespass.c`:
 * Frame rate in fights. Ideas not yet tried: Unity's `-force-gfx-direct` with box64 settings tuned for it, turning off bloom (a data change, with a visible difference), and profiling the main thread with box64's perf map on a PC.
 * Testing on other devices and CFWs, especially screens other than 640x480 and devices with more RAM.
 * The button help panel at the right edge of fights is partly cut off on 4:3 screens (the game's own layout).
+
+**ROCKNIX: "BOX64 Error: Loading needed libs".** ROCKNIX exports its own `BOX64_LD_LIBRARY_PATH=/usr/share/box64/lib`, and on a ROCKNIX x55 (libmali) the game started with that value instead of the port's, even though the launcher set it on `westonwrap.sh`'s environment (westonwrap sources PortMaster's control files again before it starts the game). box64 then could not find the game's x86 libraries. The launcher now passes the box64 settings as `VAR=value` arguments to `westonwrap.sh`, which applies them to the game's command itself, and sets `BOX64_LOG=1` so a log names any library that still fails to load.

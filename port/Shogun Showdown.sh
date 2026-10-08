@@ -197,10 +197,14 @@ port_log "starting the game"
 # GLESPASS_VENDOR / GLESPASS_RENDERER hide the GPU name from the player: for a tile based GPU
 # (Mali) Unity clears a camera target where this game's last camera draws over the previous
 # cameras' output, which leaves only the UI on screen.
+# box64's settings go to westonwrap as VAR=value arguments, which it puts on the game's command
+# line: westonwrap sources PortMaster's control files first, and on ROCKNIX the game then started
+# with the firmware's BOX64_LD_LIBRARY_PATH (/usr/share/box64/lib) instead of the port's, so box64
+# could not find the game's libraries. BOX64_LOG=1 names a library that fails to load.
 $ESUDO env WRAPPED_LIBRARY_PATH="$GAMEDIR/glespass" GLESPASS_CTXFIX=1 \
   GLESPASS_VENDOR=Generic GLESPASS_RENDERER=GLES-device \
-  BOX64_LD_LIBRARY_PATH="$GAMEDIR/box64/box64-x86_64-linux-gnu" \
   $weston_dir/westonwrap.sh headless noop kiosk crusty_glx \
+  BOX64_LOG=1 BOX64_LD_LIBRARY_PATH="$GAMEDIR/box64/box64-x86_64-linux-gnu" \
   ${unity_mapping:+SDL_GAMECONTROLLERCONFIG="$unity_mapping"} XDG_RUNTIME_DIR="$REAL_XDG_RUNTIME_DIR" HOME="$GAMEDIR/conf" XDG_CONFIG_HOME="$GAMEDIR/conf" \
   "$GAMEDIR/box64/box64" ./ShogunShowdown.x86_64 -screen-fullscreen 1 \
   -screen-width "$DISPLAY_WIDTH" -screen-height "$DISPLAY_HEIGHT" -logFile "$GAMEDIR/player.log"
