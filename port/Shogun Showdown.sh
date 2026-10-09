@@ -201,10 +201,15 @@ port_log "starting the game"
 # line: westonwrap sources PortMaster's control files first, and on ROCKNIX the game then started
 # with the firmware's BOX64_LD_LIBRARY_PATH (/usr/share/box64/lib) instead of the port's, so box64
 # could not find the game's libraries. BOX64_LOG=1 names a library that fails to load.
+# box64 recognises the Mono runtime and then forces BOX64_DYNAREC_BIGBLOCK=0 and STRONGMEM=1,
+# which overrides any dynarec setting given here; BLEEDING_EDGE=0 turns that off. BIGBLOCK=0 alone
+# held fights at 14 fps on an RG35XX H, BIGBLOCK=2 runs them at 18 (title 25 to 30). STRONGMEM=1
+# keeps the safe memory ordering for Mono's threads; 13 minutes of random fights ran without a fault.
 $ESUDO env WRAPPED_LIBRARY_PATH="$GAMEDIR/glespass" GLESPASS_CTXFIX=1 \
   GLESPASS_VENDOR=Generic GLESPASS_RENDERER=GLES-device \
   $weston_dir/westonwrap.sh headless noop kiosk crusty_glx \
   BOX64_LOG=1 BOX64_LD_LIBRARY_PATH="$GAMEDIR/box64/box64-x86_64-linux-gnu" \
+  BOX64_DYNAREC_BLEEDING_EDGE=0 BOX64_DYNAREC_STRONGMEM=1 BOX64_DYNAREC_BIGBLOCK=2 \
   ${unity_mapping:+SDL_GAMECONTROLLERCONFIG="$unity_mapping"} XDG_RUNTIME_DIR="$REAL_XDG_RUNTIME_DIR" HOME="$GAMEDIR/conf" XDG_CONFIG_HOME="$GAMEDIR/conf" \
   "$GAMEDIR/box64/box64" ./ShogunShowdown.x86_64 -screen-fullscreen 1 \
   -screen-width "$DISPLAY_WIDTH" -screen-height "$DISPLAY_HEIGHT" -logFile "$GAMEDIR/player.log"

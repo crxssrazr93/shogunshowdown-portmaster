@@ -80,10 +80,24 @@ The original library is kept as `gamedata/libsteam_api.so.orig`, outside `Plugin
 
 | Where | fps |
 | :---- | :-- |
-| Title | 25 |
-| Fight | 14.5 |
+| Title | 25 (30 with the box64 settings below) |
+| Fight | 14.5 (17.5 to 18.5) |
 
 The main thread is at about 93% of a core in fights, and Unity's render thread and the GPU are mostly idle, so this is the game's and URP's C# code under box64. Tried without effect: `BOX64_DYNAREC_BIGBLOCK=3` with `FORWARD`, `CALLRET`, `SAFEFLAGS=0`, `FASTNAN`, `FASTROUND`; `BOX64_DYNAREC_STRONGMEM=0`. Doubling the physics timestep (0.02 to 0.04 s) halved the fight frame rate and was dropped. The game is turn based, so 14 fps is playable, but animations are choppy.
+
+**Why those box64 settings did nothing, and what helped (2026-10-09).** box64 0.4.4 recognises the Mono runtime and then forces `BOX64_DYNAREC_BIGBLOCK=0` and `STRONGMEM=1`, overriding whatever the launcher sets, so every dynarec experiment above ran with the same settings. `BOX64_DYNAREC_BLEEDING_EDGE=0` switches that off. Measured in the same fight (presented fps, RG35XX H):
+
+| box64 settings (all with `BLEEDING_EDGE=0` except the first) | Title | Fight |
+| :-- | :-- | :-- |
+| none (Mono profile: BIGBLOCK 0, STRONGMEM 1) | 25.4 | 13.7 |
+| STRONGMEM 1, BIGBLOCK 0 | 24.4 | 13.8 |
+| STRONGMEM 1, BIGBLOCK 1 | 29.8 | 16.4 |
+| STRONGMEM 1, BIGBLOCK 2 (shipped) | 30.4 | 18.0 |
+| STRONGMEM 1, BIGBLOCK 3 | 30.6 | 18.4 |
+| STRONGMEM 0, BIGBLOCK 2 | 30.8 | 18.6 |
+| box64 defaults (STRONGMEM 0, BIGBLOCK 1) | 30.8 | 18.7 |
+
+The cost is BIGBLOCK 0. The launcher passes `BLEEDING_EDGE=0 STRONGMEM=1 BIGBLOCK=2`: nearly all of the gain, with the strong memory ordering kept for Mono's threads. Thirteen minutes of random input through fights, deaths and restarts ran without a fault. `MONO_INLINELIMIT=80` changed nothing (13.8).
 
 ## 8. glespass diagnostics added
 

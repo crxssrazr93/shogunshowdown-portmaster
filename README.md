@@ -6,7 +6,7 @@ The port runs the game's own x86_64 Linux build (Unity 2021.3). No game files ar
 
 | | |
 |--|--|
-| Status | Runs on an Anbernic RG35XX H (Knulli, Mali G31, 1 GB): title, menus, camp, runs and fights work with the controller and sound. About 25 fps on the title screen and 14 fps in fights. Other devices untested. |
+| Status | Runs on an Anbernic RG35XX H (Knulli, Mali G31, 1 GB): title, menus, camp, runs and fights work with the controller and sound. About 30 fps on the title screen and 18 fps in fights. Other devices untested. |
 | Target | aarch64 PortMaster devices with an OpenGL ES 3 GPU that supports ASTC textures, 1 GB RAM or more |
 | Runtimes | Westonpack (`weston_pkg_0.2`, crusty_glx), bundled box64 |
 | Memory | about 640 MB for the game plus 190 MB of GPU memory in a fight on the device |
