@@ -97,7 +97,7 @@ The main thread is at about 93% of a core in fights, and Unity's render thread a
 | STRONGMEM 0, BIGBLOCK 2 | 30.8 | 18.6 |
 | box64 defaults (STRONGMEM 0, BIGBLOCK 1) | 30.8 | 18.7 |
 
-The cost is BIGBLOCK 0. The launcher passes `BLEEDING_EDGE=0 STRONGMEM=1 BIGBLOCK=2`: nearly all of the gain, with the strong memory ordering kept for Mono's threads. Thirteen minutes of random input through fights, deaths and restarts ran without a fault. `MONO_INLINELIMIT=80` changed nothing (13.8).
+The cost is BIGBLOCK 0. The launcher passes `BLEEDING_EDGE=0 STRONGMEM=1 BIGBLOCK=2`: nearly all of the gain, with the strong memory ordering kept for Mono's threads. Thirteen minutes of random input through fights, deaths and restarts ran without a fault. `MONO_INLINELIMIT=80` changed nothing (13.8). Also without effect (fights 17.1 to 17.3 either way): vsync off (`vSyncCount` 0 in Options.dat; the title stays at 30, so the game caps its frame rate), and skipping URP's per frame volume update on the two cameras without post processing (LowResCamera, MainCamera) through `SetVolumeFrameworkUpdateMode(ViaScripting)`.
 
 ### Sharp upscaling
 
