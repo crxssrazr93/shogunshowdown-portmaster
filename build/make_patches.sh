@@ -2,9 +2,11 @@
 # Regenerates the game file changes the port ships, from an untouched copy of the Steam Linux build:
 #   port/shogunshowdown/patch/*.xdelta           (setup/audio_loadtype.py, setup/gles_shaders2021.py,
 #                                                 setup/ui_aspect_patch.cs, setup/sharp_inject.cs)
-#   port/shogunshowdown/patch/PortSharp.dll      (setup/PortSharp.cs, the sharp upscaling)
+#   port/shogunshowdown/patch/PortSharp.dll      (setup/PortSharp.cs: sharp upscaling, 4:3 fit)
 #   port/shogunshowdown/tools/astc_manifest.json (setup/astc_manifest.py)
 #   the MD5s in port/shogunshowdown/tools/patchscript
+# When a patched file changes, raise the number in port/shogunshowdown/patch/version (installs then run
+# the setup again) and run build/make_upgrades.sh for installs an older release prepared.
 # Needs python3 with UnityPy and lz4 (setup/requirements.txt), mono with mcs and Mono.Cecil 0.11, and
 # docker (xdelta3 from Ubuntu 20.04).
 # Usage: build/make_patches.sh <folder holding ShogunShowdown_Data>
@@ -22,12 +24,13 @@ cp -r "$SRC" "$W/patched"
 "$PY" "$R/setup/gles_shaders2021.py" "$W/patched"
 CECIL="${CECIL:-$(ls -d /usr/lib/mono/gac/Mono.Cecil/0.11*/ | tail -1)Mono.Cecil.dll}"
 mkdir -p "$W/uip" && cp "$CECIL" "$W/uip/"
-mcs -r:"$CECIL" -out:"$W/uip/ui_aspect_patch.exe" "$R/setup/ui_aspect_patch.cs"
-mono "$W/uip/ui_aspect_patch.exe" "$SRC/Managed" "$W/patched/Managed/Assembly-CSharp.dll"
 M="$SRC/Managed"
 mcs -target:library -nostdlib -r:"$M/mscorlib.dll" -r:"$M/netstandard.dll" -r:"$M/System.dll" -r:"$M/System.Core.dll" \
-  -r:"$M/UnityEngine.CoreModule.dll" -r:"$M/UnityEngine.UI.dll" -r:"$M/UnityEngine.dll" -out:"$R/port/shogunshowdown/patch/PortSharp.dll" \
+  -r:"$M/UnityEngine.CoreModule.dll" -r:"$M/UnityEngine.UIModule.dll" -r:"$M/UnityEngine.UI.dll" -r:"$M/UnityEngine.dll" -out:"$R/port/shogunshowdown/patch/PortSharp.dll" \
   "$R/setup/PortSharp.cs"
+mcs -r:"$CECIL" -out:"$W/uip/ui_aspect_patch.exe" "$R/setup/ui_aspect_patch.cs"
+mono "$W/uip/ui_aspect_patch.exe" "$SRC/Managed" "$W/patched/Managed/Assembly-CSharp.dll" \
+  "$R/port/shogunshowdown/patch/PortSharp.dll"
 mcs -r:"$CECIL" -out:"$W/uip/sharp_inject.exe" "$R/setup/sharp_inject.cs"
 cp "$R/port/shogunshowdown/patch/PortSharp.dll" "$W/patched/Managed/"
 mono "$W/uip/sharp_inject.exe" "$W/patched/Managed/Assembly-CSharp.dll" "$W/patched/Managed/PortSharp.dll" \

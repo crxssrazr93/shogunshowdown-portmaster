@@ -49,7 +49,9 @@ file_stamp() {
   for f in "$@"; do [ -e "$f" ] && echo "$(ls -lnL "$f" | awk '{print $5}') $(date -r "$f" +%s)"; done
   return 0
 }
-patch_stamp() { (cd "$DATADIR/ShogunShowdown_Data" && file_stamp $PATCHED_FILES); }
+# The patch version leads the stamp, so a release with changed patches runs the setup again
+PATCH_VERSION="$(cat "$GAMEDIR/patch/version")"
+patch_stamp() { echo "$PATCH_VERSION"; (cd "$DATADIR/ShogunShowdown_Data" && file_stamp $PATCHED_FILES); }
 port_files "$DATADIR/ShogunShowdown.x86_64" "$DATADIR/UnityPlayer.so" "$DATADIR/ShogunShowdown_Data/Managed/Assembly-CSharp.dll"
 # Texture markers belong next to the files they describe (older releases kept them in astc/)
 for marker in astc/*.astc_done; do
@@ -57,7 +59,7 @@ for marker in astc/*.astc_done; do
 done
 if [ "$(cat .patch_stamp 2>/dev/null)" = "$(patch_stamp)" ]; then port_log "setup: up to date"; else port_log "setup: needed (first run, game update or changed files)"; fi
 if [ "$(cat .patch_stamp 2>/dev/null)" != "$(patch_stamp)" ]; then
-  export GAMEDIR DATADIR DEVICE_ARCH controlfolder PATCHED_FILES
+  export GAMEDIR DATADIR DEVICE_ARCH controlfolder PATCHED_FILES PATCH_VERSION
   chmod +x "$GAMEDIR/tools/patchscript"
   export PATCHER_FILE="$GAMEDIR/tools/patchscript"
   export PATCHER_GAME="Shogun Showdown"
@@ -75,9 +77,14 @@ if [ "$(cat .patch_stamp 2>/dev/null)" != "$(patch_stamp)" ]; then
   fi
 fi
 
-# The patched game code starts the sharp upscaling (setup/PortSharp.cs), which lives in
-# PortSharp.dll next to it; the game cannot start without it, so it is put back whenever it is
-# missing or differs (a fresh copy of the game files, a port update). SHOGUN_SHARP=0 turns it off.
+# User settings: picture fit on square screens, sharp upscaling (defaults when the file is missing)
+SHOGUN_ASPECT="fill"; SHOGUN_SHARP="1"
+[ -f "$GAMEDIR/shogunshowdown.cfg" ] && source "$GAMEDIR/shogunshowdown.cfg"
+port_log "settings (shogunshowdown.cfg): aspect $SHOGUN_ASPECT, sharp $SHOGUN_SHARP"
+
+# The patched game code starts the picture fixes (setup/PortSharp.cs: sharp upscaling, 4:3 fit),
+# which live in PortSharp.dll next to it; the game cannot start without it, so it is put back
+# whenever it is missing or differs (a fresh copy of the game files, a port update).
 SHARP_DLL="$DATADIR/ShogunShowdown_Data/Managed/PortSharp.dll"
 if [ "$(md5sum < "$GAMEDIR/patch/PortSharp.dll")" != "$(md5sum < "$SHARP_DLL" 2>/dev/null)" ]; then
   cp -f "$GAMEDIR/patch/PortSharp.dll" "$SHARP_DLL"
@@ -213,11 +220,13 @@ port_log "starting the game"
 # which overrides any dynarec setting given here; BLEEDING_EDGE=0 turns that off. BIGBLOCK=0 alone
 # held fights at 14 fps on an RG35XX H, BIGBLOCK=2 runs them at 18 (title 25 to 30). STRONGMEM=1
 # keeps the safe memory ordering for Mono's threads; 13 minutes of random fights ran without a fault.
+# SHOGUN_ASPECT and SHOGUN_SHARP (shogunshowdown.cfg) are read by PortSharp in the game.
 $ESUDO env WRAPPED_LIBRARY_PATH="$GAMEDIR/glespass" GLESPASS_CTXFIX=1 \
   GLESPASS_VENDOR=Generic GLESPASS_RENDERER=GLES-device \
   $weston_dir/westonwrap.sh headless noop kiosk crusty_glx \
   BOX64_LOG=1 BOX64_LD_LIBRARY_PATH="$GAMEDIR/box64/box64-x86_64-linux-gnu" \
   BOX64_DYNAREC_BLEEDING_EDGE=0 BOX64_DYNAREC_STRONGMEM=1 BOX64_DYNAREC_BIGBLOCK=2 \
+  SHOGUN_ASPECT="$SHOGUN_ASPECT" SHOGUN_SHARP="$SHOGUN_SHARP" \
   ${unity_mapping:+SDL_GAMECONTROLLERCONFIG="$unity_mapping"} XDG_RUNTIME_DIR="$REAL_XDG_RUNTIME_DIR" HOME="$GAMEDIR/conf" XDG_CONFIG_HOME="$GAMEDIR/conf" \
   "$GAMEDIR/box64/box64" ./ShogunShowdown.x86_64 -screen-fullscreen 1 \
   -screen-width "$DISPLAY_WIDTH" -screen-height "$DISPLAY_HEIGHT" -logFile "$GAMEDIR/player.log"

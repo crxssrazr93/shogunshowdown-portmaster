@@ -7,13 +7,14 @@
 // the view is 8.4375 units high and each side edge sits 4.21875 * aspect units from the middle:
 // 7.5 at 16:9, 6.75 at 16:10, 5.625 at 4:3. On 4:3 the right panel is cut off.
 //
-// After the patch the width test is gone and the shift is computed from the screen's aspect:
+// After the patch the width test is gone and the shift is computed from the screen's aspect, as
+// PortSharp.Aspect() (setup/PortSharp.cs) reports it (4:3 at least in its fit mode):
 // PortShift(base) = max(0, 4.21875 * (16/9 - aspect) - 0.25) * base / 0.5,
 // which gives the original 0.5 / 0.25 at 1280x800, nothing at 16:9 and wider, and 1.625 / 0.8125
 // at 4:3. The shop button rule (mode 3) is unchanged.
 //
 // Build: mcs -r:Mono.Cecil.dll -out:ui_aspect_patch.exe ui_aspect_patch.cs
-// Usage: mono ui_aspect_patch.exe <Managed dir> <output Assembly-CSharp.dll>
+// Usage: mono ui_aspect_patch.exe <Managed dir> <output Assembly-CSharp.dll> <PortSharp.dll>
 using System;
 using System.Linq;
 using Mono.Cecil;
@@ -37,10 +38,9 @@ class UiAspectPatch
 
         // static float PortShift(float baseShift)
         var core = mod.AssemblyReferences.Single(r => r.Name == "UnityEngine.CoreModule");
-        var screen = new TypeReference("UnityEngine", "Screen", mod, core);
         var mathf = new TypeReference("UnityEngine", "Mathf", mod, core) { IsValueType = true };
-        var getWidth = new MethodReference("get_width", mod.TypeSystem.Int32, screen);
-        var getHeight = new MethodReference("get_height", mod.TypeSystem.Int32, screen);
+        var aspect = mod.ImportReference(ModuleDefinition.ReadModule(args[2]).GetType("PortSharp").Methods
+            .Single(m => m.Name == "Aspect"));
         var max = new MethodReference("Max", mod.TypeSystem.Single, mathf);
         max.Parameters.Add(new ParameterDefinition(mod.TypeSystem.Single));
         max.Parameters.Add(new ParameterDefinition(mod.TypeSystem.Single));
@@ -50,11 +50,7 @@ class UiAspectPatch
         var il = shift.Body.GetILProcessor();
         il.Emit(OpCodes.Ldc_R4, 4.21875f);
         il.Emit(OpCodes.Ldc_R4, 16f / 9f);
-        il.Emit(OpCodes.Call, getWidth);
-        il.Emit(OpCodes.Conv_R4);
-        il.Emit(OpCodes.Call, getHeight);
-        il.Emit(OpCodes.Conv_R4);
-        il.Emit(OpCodes.Div);
+        il.Emit(OpCodes.Call, aspect);
         il.Emit(OpCodes.Sub);
         il.Emit(OpCodes.Mul);
         il.Emit(OpCodes.Ldc_R4, 0.25f);

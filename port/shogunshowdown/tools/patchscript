@@ -5,7 +5,8 @@
 # audio that streams instead of being held in memory, side panels moved in on screens narrower
 # than 16:9, sharp upscaling started from the game code) from the xdelta patches in patch/. Each file
 # is checked by MD5 before and after, so only the supported Steam build is patched, and a file
-# already patched is left alone.
+# already patched is left alone; one patched by an older release is updated with its upgrade patch
+# (patch/<file>.<its MD5>.xdelta, made by build/make_upgrades.sh).
 # Step 7: the large textures are converted to ASTC 4x4 with PortMaster's astcenc (tools/
 # astc_textures.py), which cuts their GPU memory to a quarter so a run fits in 1 GB of RAM.
 # PortMaster's patcher only shows this output on screen; keep a copy for bug reports.
@@ -31,7 +32,7 @@ resources.assets 58763dd03317d56ae69353c0b6a2f275 f30a2a5168301c7af7125b11f05dfe
 sharedassets0.assets d78c444f7027da6762bb20657761f0cc f75dc5bfdbae3235bd6db617092d3ea2
 sharedassets2.assets 8387ebc74f08c1ba648d037bb6a42a73 d077132ee5b784203cbb1fc845715503
 Resources/unity_builtin_extra 200959112b2568233b06d35b634e893b 43d0ada6f0304c09c1831aacba04fdf2
-Managed/Assembly-CSharp.dll fd8f4c14bc58996be94b6e5c8d794205 dd4b93aad683fb542f178e45f1ce84b9"
+Managed/Assembly-CSharp.dll fd8f4c14bc58996be94b6e5c8d794205 20917dbe8b13dc3240fd38dbecc493a4"
 
 echo "Adapting your copy of Shogun Showdown to this device."
 echo "This runs once (and again after a game update)."
@@ -58,12 +59,17 @@ while read -r file orig patched; do
     echo "  already patched"
     continue
   fi
-  if [ "$sum" != "$orig" ]; then
+  # the original takes the full patch; a file an older release patched takes its upgrade patch
+  delta="$GAMEDIR/patch/$(basename "$file").xdelta"
+  if [ "$sum" != "$orig" ] && [ -f "$GAMEDIR/patch/$(basename "$file").$sum.xdelta" ]; then
+    delta="$GAMEDIR/patch/$(basename "$file").$sum.xdelta"
+    echo "  patched by an older release, updating"
+  elif [ "$sum" != "$orig" ]; then
     echo "  unexpected version (MD5 $sum)."
     failed=1
     continue
   fi
-  if "$XDELTA" -d -f -s "$file" "$GAMEDIR/patch/$(basename "$file").xdelta" "$file.new" &&
+  if "$XDELTA" -d -f -s "$file" "$delta" "$file.new" &&
      [ "$(md5sum "$file.new" | cut -d' ' -f1)" = "$patched" ]; then
     mv -f "$file.new" "$file"
     echo "  done"
@@ -81,7 +87,7 @@ if [ "$failed" = 0 ]; then
 fi
 
 if [ "$failed" = 0 ]; then
-  file_stamp $PATCHED_FILES > "$GAMEDIR/.patch_stamp"
+  { echo "$PATCH_VERSION"; file_stamp $PATCHED_FILES; } > "$GAMEDIR/.patch_stamp"
   echo "Done. Starting the game."
   port_log "setup finished in ${SECONDS}s"
   port_mem end
