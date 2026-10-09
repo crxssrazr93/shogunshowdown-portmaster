@@ -108,6 +108,10 @@ The game draws its scene into a 480x270 render texture with point filtering and 
 
 On screens narrower than 4:3 (720x720) the game shows its 16:9 picture across the full width, and `setup/ui_aspect_patch.cs` moves the side panels (button help, info) in to keep them on screen. A tester found the button help then covers an enemy on the outermost tile. `SHOGUN_ASPECT="fit"` in `shogunshowdown.cfg` gives every camera that draws to the screen a centred 4:3 viewport (`Camera.rect`) instead, with a black clearing camera at depth -100 for the bars, and `PortSharp.Aspect()` reports 4:3 to the panel layout, so the screen looks as it does at 640x480. Every canvas in the game is in world space, so the UI follows the camera viewports. Starting the game at a 4:3 window size does not work: the game sets its own resolution after start. The default stays `fill`, which uses the whole screen. On 4:3 and wider screens both are the same.
 
+### Run summary box on the title screen
+
+With a run in progress, Continue opens a box with the run time, hero and location to its right. On screens narrower than 16:9 its right side was off screen (reported by a tester at 640x480): the game only keeps boxes opened above or below their target inside the screen (`InfoBox.AdjustToFitViewport` returns early for left and right boxes). `PortSharp.MoveContinueInfo()` gives the Continue item's `InfoBoxActivator` a new target below Continue and towards the right edge, with the "Below" placement, beside New Run, Options and Quit. The game opens the box as a child of its target and animates the box's own scale, so on square screens in fill mode, where the gap between the menu and the screen edge is narrower than the box, the target carries a smaller scale (about 0.75 at 720x720). 16:9 and wider screens keep the game's placement. Checked on the PC at 640x480, 720x720 fill and fit and 1280x720, and on the RG35XX H.
+
 ## 8. glespass diagnostics added
 
 All off unless set, documented at the top of `glespass/glespass.c`:

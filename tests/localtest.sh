@@ -1,7 +1,7 @@
 #!/bin/bash
 # Device-like test on an x86_64 Linux PC: the game's own x86_64 player on an OpenGL ES 3.2 context
 # (tests/pc/gles_force.so makes Mesa create GLES contexts, as crusty_glx does on the device), with
-# the port's patched data, a rootful Xwayland at a handheld resolution and a scripted virtual
+# the port's patched data, a an offscreen Xvfb server (no window on the desktop) at a handheld resolution and a scripted virtual
 # gamepad (tests/vpad.py). The game runs in bwrap with only the virtual pad under /dev/input.
 #
 # Usage: tests/localtest.sh <WxH> "<vpad script>" [tag]
@@ -19,8 +19,9 @@ RES="${1:-640x480}"; SCRIPT="$2"; TAG="${3:-run}"; D=${DISP:-9}
 OUT="$T/out/$TAG"; mkdir -p "$OUT"; rm -f "$OUT"/*.png "$OUT"/rss.log
 H="$T/out/home-$TAG"; [ "${FRESH:-0}" = 1 ] && rm -rf "$H"; mkdir -p "$H"
 while [ -e "/tmp/.X$D-lock" ]; do sleep 0.5; done
-Xwayland :$D -geometry "$RES" -decorate >/dev/null 2>&1 & XPID=$!
+unset WAYLAND_DISPLAY; export SDL_VIDEODRIVER=x11 XDG_RUNTIME_DIR=/tmp/xdg-offscreen; mkdir -p -m 700 /tmp/xdg-offscreen; Xvfb :$D -screen 0 "$RES"x24 -nolisten tcp >/dev/null 2>&1 & XPID=$!
 for i in $(seq 40); do DISPLAY=:$D xdpyinfo >/dev/null 2>&1 && break; sleep 0.5; done
+DISPLAY=:$D xdpyinfo >/dev/null 2>&1 || { echo "offscreen X server :$D did not start"; kill $XPID 2>/dev/null; exit 1; }
 before=$(ls /dev/input/)
 SHOT_CMD="DISPLAY=:$D import -window root $OUT/{name}.png 2>/dev/null" python3 "$T/vpad.py" "wait 2; $SCRIPT" & VPID=$!
 sleep 2
