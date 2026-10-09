@@ -99,6 +99,10 @@ The main thread is at about 93% of a core in fights, and Unity's render thread a
 
 The cost is BIGBLOCK 0. The launcher passes `BLEEDING_EDGE=0 STRONGMEM=1 BIGBLOCK=2`: nearly all of the gain, with the strong memory ordering kept for Mono's threads. Thirteen minutes of random input through fights, deaths and restarts ran without a fault. `MONO_INLINELIMIT=80` changed nothing (13.8).
 
+### Sharp upscaling
+
+The game draws its scene into a 480x270 render texture with point filtering and shows it on a RawImage scaled to the screen height: 1.78x at 640x480 and 2.67x at 720x720 and 1280x720. With nearest neighbour sampling at those factors, art pixels come out 1 or 2 (2 or 3) screen pixels wide, so lines wobble in width as things move. `setup/PortSharp.cs` (built into `patch/PortSharp.dll`) swaps the RawImage's texture for a copy k times larger (k = screen height / 270 rounded up, at least 2), filled each frame with a nearest neighbour `Graphics.Blit` just before the camera that draws the RawImage, and shown with bilinear filtering. Every art pixel becomes an even block and only the edges between blocks are blended ("sharp bilinear"). `setup/sharp_inject.cs` adds the call to `PortSharp.Init()` at the start of `GameInitialization.PCInitialization`; the launcher copies `PortSharp.dll` into `Managed/` when it is missing or differs. On the RG35XX H (480x270 drawn through 960x540) fights ran at 17.1 to 17.2 fps with it and 17.2 without. `SHOGUN_SHARP=0` turns it off.
+
 ## 8. glespass diagnostics added
 
 All off unless set, documented at the top of `glespass/glespass.c`:

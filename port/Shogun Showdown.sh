@@ -75,6 +75,14 @@ if [ "$(cat .patch_stamp 2>/dev/null)" != "$(patch_stamp)" ]; then
   fi
 fi
 
+# The patched game code starts the sharp upscaling (setup/PortSharp.cs), which lives in
+# PortSharp.dll next to it; the game cannot start without it, so it is put back whenever it is
+# missing or differs (a fresh copy of the game files, a port update). SHOGUN_SHARP=0 turns it off.
+SHARP_DLL="$DATADIR/ShogunShowdown_Data/Managed/PortSharp.dll"
+if [ "$(md5sum < "$GAMEDIR/patch/PortSharp.dll")" != "$(md5sum < "$SHARP_DLL" 2>/dev/null)" ]; then
+  cp -f "$GAMEDIR/patch/PortSharp.dll" "$SHARP_DLL"
+fi
+
 # Steam is replaced by a minimal stand in (no ownership or DRM checks; see steamstub/readme.txt)
 # The original is kept outside Plugins/, since Unity loads every library in that folder.
 PLUGINS="$DATADIR/ShogunShowdown_Data/Plugins"

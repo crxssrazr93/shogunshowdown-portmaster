@@ -1,7 +1,8 @@
 #!/bin/bash
 # Regenerates the game file changes the port ships, from an untouched copy of the Steam Linux build:
 #   port/shogunshowdown/patch/*.xdelta           (setup/audio_loadtype.py, setup/gles_shaders2021.py,
-#                                                 setup/ui_aspect_patch.cs)
+#                                                 setup/ui_aspect_patch.cs, setup/sharp_inject.cs)
+#   port/shogunshowdown/patch/PortSharp.dll      (setup/PortSharp.cs, the sharp upscaling)
 #   port/shogunshowdown/tools/astc_manifest.json (setup/astc_manifest.py)
 #   the MD5s in port/shogunshowdown/tools/patchscript
 # Needs python3 with UnityPy and lz4 (setup/requirements.txt), mono with mcs and Mono.Cecil 0.11, and
@@ -23,6 +24,15 @@ CECIL="${CECIL:-$(ls -d /usr/lib/mono/gac/Mono.Cecil/0.11*/ | tail -1)Mono.Cecil
 mkdir -p "$W/uip" && cp "$CECIL" "$W/uip/"
 mcs -r:"$CECIL" -out:"$W/uip/ui_aspect_patch.exe" "$R/setup/ui_aspect_patch.cs"
 mono "$W/uip/ui_aspect_patch.exe" "$SRC/Managed" "$W/patched/Managed/Assembly-CSharp.dll"
+M="$SRC/Managed"
+mcs -target:library -nostdlib -r:"$M/mscorlib.dll" -r:"$M/netstandard.dll" -r:"$M/System.dll" -r:"$M/System.Core.dll" \
+  -r:"$M/UnityEngine.CoreModule.dll" -r:"$M/UnityEngine.UI.dll" -r:"$M/UnityEngine.dll" -out:"$R/port/shogunshowdown/patch/PortSharp.dll" \
+  "$R/setup/PortSharp.cs"
+mcs -r:"$CECIL" -out:"$W/uip/sharp_inject.exe" "$R/setup/sharp_inject.cs"
+cp "$R/port/shogunshowdown/patch/PortSharp.dll" "$W/patched/Managed/"
+mono "$W/uip/sharp_inject.exe" "$W/patched/Managed/Assembly-CSharp.dll" "$W/patched/Managed/PortSharp.dll" \
+  "$W/uip/Assembly-CSharp.dll"
+mv -f "$W/uip/Assembly-CSharp.dll" "$W/patched/Managed/Assembly-CSharp.dll"
 mkdir -p "$W/orig/Resources" "$W/orig/Managed"
 for f in "${FILES[@]}"; do cp "$SRC/$f" "$W/orig/$f"; done
 

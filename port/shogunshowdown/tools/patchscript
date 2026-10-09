@@ -3,7 +3,7 @@
 # script prints. The launcher exports GAMEDIR, DATADIR, DEVICE_ARCH and controlfolder.
 # Steps 1 to 6: six game files get the port's changes (OpenGL ES 3 shaders and graphics API,
 # audio that streams instead of being held in memory, side panels moved in on screens narrower
-# than 16:9) from the xdelta patches in patch/. Each file
+# than 16:9, sharp upscaling started from the game code) from the xdelta patches in patch/. Each file
 # is checked by MD5 before and after, so only the supported Steam build is patched, and a file
 # already patched is left alone.
 # Step 7: the large textures are converted to ASTC 4x4 with PortMaster's astcenc (tools/
@@ -31,7 +31,7 @@ resources.assets 58763dd03317d56ae69353c0b6a2f275 f30a2a5168301c7af7125b11f05dfe
 sharedassets0.assets d78c444f7027da6762bb20657761f0cc f75dc5bfdbae3235bd6db617092d3ea2
 sharedassets2.assets 8387ebc74f08c1ba648d037bb6a42a73 d077132ee5b784203cbb1fc845715503
 Resources/unity_builtin_extra 200959112b2568233b06d35b634e893b 43d0ada6f0304c09c1831aacba04fdf2
-Managed/Assembly-CSharp.dll fd8f4c14bc58996be94b6e5c8d794205 d7561ebb295d1b6eb67a32431644957e"
+Managed/Assembly-CSharp.dll fd8f4c14bc58996be94b6e5c8d794205 dd4b93aad683fb542f178e45f1ce84b9"
 
 echo "Adapting your copy of Shogun Showdown to this device."
 echo "This runs once (and again after a game update)."

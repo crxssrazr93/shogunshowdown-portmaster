@@ -25,7 +25,7 @@ The game reads the pad itself. Buttons are named as the game's prompts show them
 
 On 1 GB devices turn on zram (or swap) in your firmware's settings, so the game does not run out of memory.
 
-Runs through box64 and Westonpack. Saves are in `conf/unity3d/Roboatino/ShogunShowdown/`. The picture is 16:9, so 4:3 screens show bars. The steam stub only lets the game start and contains no DRM checks.
+Runs through box64 and Westonpack. Saves are in `conf/unity3d/Roboatino/ShogunShowdown/`. The picture is 16:9, so 4:3 screens show bars. The port scales the game's low resolution picture with sharp bilinear filtering, so its pixels stay even on screens that are not a whole multiple of it. The steam stub only lets the game start and contains no DRM checks.
 
 Source and build instructions: https://github.com/crxssrazr93/shogunshowdown-portmaster
 
