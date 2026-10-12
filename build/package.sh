@@ -10,7 +10,10 @@ done
 stage=$(mktemp -d)
 trap 'rm -rf "$stage"' EXIT
 cd "$R/port"
-cp "Shogun Showdown.sh" "$stage/"
+# Release zips carry the "# PORTMASTER:" line that PortMaster's own build adds; without it
+# harbourmaster inserts it into the launcher on its first runtime download, even while it runs.
+{ head -n 1 "Shogun Showdown.sh"; echo "# PORTMASTER: shogunshowdown.zip, Shogun Showdown.sh"; tail -n +2 "Shogun Showdown.sh"; } > "$stage/Shogun Showdown.sh"
+chmod 755 "$stage/Shogun Showdown.sh"
 cp -r shogunshowdown "$stage/"
 rm -rf "$stage"/shogunshowdown/{conf,astc,log.txt,log.prev.txt,setup_log.txt,setup_log.prev.txt,player.log,.patch_stamp}
 find "$stage/shogunshowdown/gamedata" -mindepth 1 ! -name 'Put Linux game files here' -exec rm -rf {} +
