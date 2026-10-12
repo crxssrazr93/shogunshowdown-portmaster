@@ -94,6 +94,12 @@ public static class PortCapture
         var go = new GameObject("SteamManager");
         UnityEngine.Object.DontDestroyOnLoad(go);
         go.AddComponent<PortCaptureBehaviour>();
+        // The first scene (GameInitialization) waits for the localization system to start, which
+        // takes a different number of frames on every run; the title screen would then load at a
+        // different Time.time (and shaders, tweens and the menu's own timers start from it). The game
+        // clock stands still until that scene has been left, as it does while a scene loads in
+        // LoadSceneAsync.
+        if (!frozen) { Advance(); frozen = true; savedScale = Time.timeScale; Time.timeScale = 0f; Debug.Log("PortCapture: clock frozen until the first scene change, game time " + Time.time.ToString("R")); }
     }
 }
 
@@ -197,10 +203,13 @@ public class PortCaptureBehaviour : MonoBehaviour
         int n; visits.TryGetValue(s.name, out n); visits[s.name] = ++n;
         baseScene = s.name;
         scene = n == 1 ? s.name : s.name + "#" + n;
+        loaded = true;
         sceneFrame = 0;
         UnityEngine.Random.InitState(seed);
         ReseedSystemRandom();
-        PortCapture.Thaw();
+        // Unity drops gamepad input while its window has no focus; the clock stays frozen until it has
+        // (a run that reaches the menus before the window system gave it focus lost a button press)
+        if (Application.isFocused || waitFocus == "0") PortCapture.Thaw(); else { focusSince = Time.realtimeSinceStartup; Debug.Log("PortCapture: waiting for the window focus"); }
         if (Env("PORTCAP_ACTIONS", "0") == "1") LogActions();
         SeedParticles();
         Debug.Log("PortCapture: scene " + scene + " loaded, game time " + Time.time.ToString("R"));
@@ -260,10 +269,19 @@ public class PortCaptureBehaviour : MonoBehaviour
         if (changed && pad != null) InputSystem.QueueStateEvent(pad, padState);
     }
 
+    bool loaded;
+    float focusSince = -1f;
+    string waitFocus = Env("PORTCAP_WAITFOCUS", "1");
+
     void Update()
     {
         PortCapture.Advance();
-        sceneFrame++;
+        // (a window system that never reports focus does not stall the run for more than 30 real seconds)
+        if (PortCapture.frozen && loaded && (Application.isFocused || (focusSince > 0f && Time.realtimeSinceStartup - focusSince > 30f))) {
+            if (!Application.isFocused) Debug.Log("PortCapture: no window focus after 30 s, going on");
+            PortCapture.Thaw();
+        }
+        if (!PortCapture.frozen) sceneFrame++;
         DriveInput();
     }
 

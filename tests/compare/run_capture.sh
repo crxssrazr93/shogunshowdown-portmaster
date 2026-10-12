@@ -29,7 +29,6 @@ WS="${WS:-$HOME/Games/steam-ports/shogunshowdown}"
 case "$FLAVOR" in
   ref)  G="$WS/cmp-ref";  PRE=;;
   port) G="$WS/cmp-port"; PRE="$T/pc/gles_force.so";;
-  orig) G="$WS/cmp-orig"; PRE=;;
   astc) G="$WS/cmp-astc"; PRE="$T/pc/gles_force.so";;
   *) echo "ref, port or astc"; exit 2;;
 esac
@@ -48,9 +47,9 @@ export ALSA_CONFIG_PATH="$C/alsa_null.conf"
 Xvfb :$D -screen 0 "$RES"x24 -nolisten tcp >/dev/null 2>&1 & XPID=$!
 for i in $(seq 40); do DISPLAY=:$D xdpyinfo >/dev/null 2>&1 && break; sleep 0.5; done
 DISPLAY=:$D xdpyinfo >/dev/null 2>&1 || { echo "offscreen X server :$D did not start"; kill -9 $XPID 2>/dev/null; exit 1; }
-( sleep 10; while true; do
+( while true; do
     W=$(DISPLAY=:$D xdotool search --name "Shogun" 2>/dev/null | head -1)
-    [ -n "$W" ] && DISPLAY=:$D xdotool windowfocus "$W" 2>/dev/null; sleep 2; done ) & FPID=$!
+    [ -n "$W" ] && DISPLAY=:$D xdotool windowfocus "$W" 2>/dev/null; sleep 1; done ) & FPID=$!
 cd "$G"
 W=${RES%x*}; Hh=${RES#*x}
 echo "$INPUT" > "$OUT/input.txt"; echo "$FRAMES" > "$OUT/frames.txt"

@@ -1,26 +1,46 @@
 #!/bin/bash
-# The whole comparison (see README.md). For each scenario (idle, shoot): RUNS (default 3) runs of
-# cmp-ref and of cmp-port, a determinism check of the first two of each, the first ref run against the
-# first port run, all runs against each other (best pair per frame), then the shader log scan, with
-# everything also written to tests/compare/out/summary.txt. About a minute per run. Needs
-# make_copies.sh to have run.
-# Usage: tests/compare/run_all.sh [scenario ...]      (default: shoot idle)
+# The whole comparison (see README.md). For each scenario (default: fight): RUNS (default 2) runs of
+# cmp-ref, cmp-port and cmp-astc, two games at a time (displays 9 and 10), then a determinism check of
+# each build against itself (first two runs, strict), ref against port, port against astc and ref
+# against astc (first runs, and the best pair over all runs), then the shader log scan; everything is
+# also written to tests/compare/out/summary_<scenario>.txt. Needs make_copies.sh to have run.
+# Usage: tests/compare/run_all.sh [scenario ...]
+# Env:   RUNS=2, SKIP_EXISTING=1 (keep finished runs), RES=640x480 (suffixes the scenario: fight_720x720)
 C="$(cd "$(dirname "$0")" && pwd)"
-SCENS=("$@"); [ ${#SCENS[@]} = 0 ] && SCENS=(shoot idle)
-mkdir -p "$C/out"; : > "$C/out/summary.txt"
+SCENS=("$@"); [ ${#SCENS[@]} = 0 ] && SCENS=(fight)
+RES="${RES:-640x480}"
+mkdir -p "$C/out"
 for s in "${SCENS[@]}"; do
-  find "$C/runs" -maxdepth 1 -type d \( -name "ref_${s}_*" -o -name "port_${s}_*" \) -exec rm -rf {} + 2>/dev/null
-  for f in ref port; do for r in $(seq 1 ${RUNS:-3}); do "$C/run_capture.sh" $f $s ${f}_${s}_$r || echo "run ${f}_${s}_$r did not finish"; done; done
+  tag="$s"; [ "$RES" != 640x480 ] && tag="${s}_$RES"
+  jobs_=(); for r in $(seq 1 ${RUNS:-2}); do for f in ref port astc; do
+    if [ "${SKIP_EXISTING:-0}" = 1 ] && grep -q "PortCapture: done" "$C/runs/${f}_${tag}_$r/player.log" 2>/dev/null; then continue; fi
+    jobs_+=("$f $r"); done; done
+  i=0
+  while [ $i -lt ${#jobs_[@]} ]; do
+    pids=()
+    for k in 0 1; do
+      [ $((i + k)) -lt ${#jobs_[@]} ] || continue
+      set -- ${jobs_[$((i + k))]}; f=$1; r=$2; name=${f}_${tag}_$r
+      DISP=$((9 + k)) "$C/run_capture.sh" $f $s $name $RES & pids+=($!)
+    done
+    for p in "${pids[@]}"; do wait $p || echo "a run did not finish"; done
+    i=$((i + 2))
+  done
   {
-    echo "##### scenario $s: determinism, cmp-ref twice"
-    "$C/compare.py" ref_${s}_1 ref_${s}_2 --name det_ref_$s --strict
-    echo; echo "##### scenario $s: determinism, cmp-port twice"
-    "$C/compare.py" port_${s}_1 port_${s}_2 --name det_port_$s --strict
-    echo; echo "##### scenario $s: first cmp-ref run (A) against first cmp-port run (B)"
-    "$C/compare.py" ref_${s}_1 port_${s}_1 --name ref_vs_port_$s
-    echo; echo "##### scenario $s: all runs, best ref/port pair per frame"
-    "$C/compare_runs.py" $s
-    echo
-  } 2>&1 | tee -a "$C/out/summary.txt"
+    for f in ref port astc; do
+      [ -d "$C/runs/${f}_${tag}_2" ] || continue          # RUNS=1: no determinism check
+      echo "##### $tag: determinism, cmp-$f twice (strict)"
+      "$C/compare.py" ${f}_${tag}_1 ${f}_${tag}_2 --name det_${f}_$tag --strict; echo
+    done
+    for pair in "ref port" "port astc" "ref astc"; do
+      set -- $pair
+      echo "##### $tag: first $1 run (A) against first $2 run (B)"
+      "$C/compare.py" ${1}_${tag}_1 ${2}_${tag}_1 --name ${1}_vs_${2}_$tag; echo
+      [ -d "$C/runs/${1}_${tag}_2" ] && {
+        echo "##### $tag: all runs, best $1/$2 pair per frame"
+        "$C/compare_runs.py" $tag $1 $2; echo; }
+    done
+    echo "##### shader log scan"
+    "$C/log_scan.py" $(cd "$C/runs" && ls | grep -E "^(ref|port|astc)_${tag}_")
+  } 2>&1 | tee "$C/out/summary_$tag.txt"
 done
-{ echo "##### shader log scan"; "$C/log_scan.py" $(cd "$C/runs" && ls | grep -E "^(ref|port)_"); } 2>&1 | tee -a "$C/out/summary.txt"
